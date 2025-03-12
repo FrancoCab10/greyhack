@@ -1,0 +1,88 @@
+// Author: R34lQu1ck
+// Version: 1.0
+
+////////////////////
+//      UTILS     //
+////////////////////
+OS = get_shell.host_computer
+COLORS = {
+	"brand": "#880088",
+	"red": "#ff3333",
+	"cyan": "#00aaaa",
+	"green": "#00ff88",
+	"yellow": "#cccc00",
+	"light": "#cccccc",
+	"dark": "#222222",
+}
+
+set_color = function(color, message)
+	return "<color=" + color + ">" + message + "</color>"
+end function
+
+format_bar = function(value)
+	filled = round(value / 10)
+	
+	color = COLORS.green
+	if filled >= 8 then
+		color = COLORS.red
+	else if filled >= 5 then
+		color = COLORS.yellow
+	end if
+	
+	bar_total_val = 20
+	bar_full_val = filled * 2
+	bar_empty_val = bar_total_val - bar_full_val
+	bar_full = set_color(color, "#" * bar_full_val)
+	bar_empty = set_color(COLORS.dark, "-" * bar_empty_val)
+	bar_value = set_color(color, value + "%")
+	
+	return set_color(COLORS.light, "[" + bar_full + bar_empty + "] [" + bar_value + "]")
+end function
+
+format_row = function(usr, pid, cpu, mem, cmd)
+	cols = []
+	cols.push(set_color(COLORS.red, usr))
+	cols.push(set_color(COLORS.cyan, pid))
+	cols.push(set_color(COLORS.green, cpu))
+	cols.push(set_color(COLORS.yellow, mem))
+	cols.push(set_color(COLORS.light, cmd))
+		
+	return cols.join(" ")
+end function
+
+
+////////////////////
+//     PROGRAM    //
+////////////////////
+while true
+	total_cpu = 0.0
+	total_mem = 0.0
+	procs = OS.show_procs
+	lines = procs.split(char(10))
+	
+	rows = []
+	for line in lines
+		values = line.split(" ")
+		usr = values[0]
+		pid = values[1]
+		cpu = values[2]
+		mem = values[3]
+		cmd = values[4]
+		
+		if rows.len > 0 then
+			total_cpu = total_cpu + cpu.remove("%").val
+			total_mem = total_mem + mem.remove("%").val
+		end if
+		
+		rows.push(format_row(usr, pid, cpu, mem, cmd))
+	end for
+
+	print(set_color(COLORS.light, set_color(COLORS.brand, "R34lQu1ck") + " HTOP"), 1)
+	print("")
+	print(set_color(COLORS.green, "CPU: " + format_bar(total_cpu)))
+	print(set_color(COLORS.yellow, "MEM: " + format_bar(total_mem)))
+	print("")
+	print(format_columns(rows.join(char(10))))
+	print("")
+	wait(2)
+end while
